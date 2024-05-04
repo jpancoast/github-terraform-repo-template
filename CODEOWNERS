@@ -1,0 +1,10 @@
+# Reference https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+## Global Owners
+* @jpancoast
+
+## Example
+# You can also add codeowners for specific directories
+# <directory> @githubusernames:
+#   EX:
+# /aws/*/blah/templates/ @jpancoast @jimbob
