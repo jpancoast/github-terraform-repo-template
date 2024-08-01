@@ -1,0 +1,102 @@
+name: Check TF / TG file formatting
+
+on: [push]
+
+env:
+  TERRAGRUNT_VERSION: v0.45.1
+
+jobs:
+  tflint:
+    runs-on: ubuntu-latest
+    name: tflint
+
+    steps:
+      - uses: actions/checkout@v3
+        name: Checkout source code
+
+      - uses: actions/cache@v3
+        name: Cache plugin dir
+        with:
+          path: ~/.tflint.d/plugins
+          key: ${{ matrix.os }}-tflint-${{ hashFiles('.tflint.hcl') }}
+
+      - uses: terraform-linters/setup-tflint@v3
+        name: Setup TFLint
+        with:
+          tflint_version: v0.44.1
+
+      - name: Show version
+        run: tflint --version
+
+      - name: Init TFLint
+        run: tflint --init
+        env:
+          # https://github.com/terraform-linters/tflint/blob/master/docs/user-guide/plugins.md#avoiding-rate-limiting
+          GITHUB_TOKEN: ${{ github.token }}
+
+      - name: Run TFLint
+        run: tflint -f compact
+
+  tfsec:
+    name: tfsec
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clone repo
+        uses: actions/checkout@master
+      - name: tfsec
+        uses: aquasecurity/tfsec-action@v1.0.0
+
+  validate:
+    runs-on: ubuntu-latest
+    name: Validate TF
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: terraform validate
+        uses: dflook/terraform-validate@v1
+        id: validate-check
+        with:
+          path: ./
+
+      - name: TF Validation failed
+        if: ${{ failure() && steps.validate-check.outputs.failure-reason == 'validate-failed' }}
+        run: echo "terraform formatting check failed"
+
+  check_format:
+    runs-on: ubuntu-latest
+    name: Check TF & TG file formatting
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: terraform fmt
+        uses: dflook/terraform-fmt-check@v1
+        id: fmt-check
+        with:
+          path: ./
+
+      - name: Incorrect TF Formatting
+        if: ${{ failure() && steps.fmt-check.outputs.failure-reason == 'check-failed' }}
+        run: echo "terraform formatting check failed"
+
+      - name: Install Terragrunt
+        run: |
+          sudo wget -q -O /bin/terragrunt "https://github.com/gruntwork-io/terragrunt/releases/download/$TERRAGRUNT_VERSION/terragrunt_linux_amd64"
+          sudo chmod +x /bin/terragrunt
+
+      - name: Terragrunt hclfmt
+        run: |
+          result=$(terragrunt hclfmt 2>&1)
+
+          if [ "$result" != "" ]; then
+            echo "Please properly format the following files in the output:"
+            echo "RESULT: $result"
+
+            exit 1
+          fi
