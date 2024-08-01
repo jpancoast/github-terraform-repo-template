@@ -9,8 +9,9 @@ jobs:
         with:
           fetch-depth: 0
 
+      #https://github.com/marketplace/actions/trufflehog-oss
       - name: TruffleHog OSS
-        uses: trufflesecurity/trufflehog@v3.23.0
+        uses: trufflesecurity/trufflehog@v3.80.5
         with:
           path: ./
           base: ""
