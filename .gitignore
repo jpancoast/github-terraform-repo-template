@@ -1,7 +1,18 @@
 # Local .terraform directories
 **/.terraform/*
 
-# .tfstate files
+# Other terraform stuff
+**/.terraform.lock.hcl
+**/.terraform.tfstate/**
+**/.terraform.tfstate.backup/**
+**/*.tfvars.json
+**/*.planfile
+**/terraform.tfstate
+**/terraform.tfstate.backup
+**/terraform.tfstate.d/**
+**/cache.*.txt
+
+# .tfstate files (this might be redundant from the above)
 *.tfstate
 *.tfstate.*
 
